@@ -27,7 +27,9 @@ The `echo: false` option disables the printing of code (only output is displayed
 
 # Principle component analysis (PCA): RNA seq example
 
-This is walkthrough of an R tutorial from Bioinformatics for All R Series, described in this [tutorial](https://bioinfo4all.wordpress.com/2021/01/31/tutorial-6-how-to-do-principal-component-analysis-pca-in-r/).
+This is walkthrough of an R tutorial from Bioinformatics for All R Series, described in this
+
+[PCA tutorial](https://bioinfo4all.wordpress.com/2021/01/31/tutorial-6-how-to-do-principal-component-analysis-pca-in-r/)
 
 I found this nice series of tutorials on bioinformatics in R. It is based on RNA seq data from this [paper](https://www.cell.com/cell/fulltext/S0092-8674(16)30280-X?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS009286741630280X%3Fshowall%3Dtrue).
 
@@ -53,10 +55,20 @@ library("factoextra")
 library("FactoMineR")
 ```
 
+Let's also load the tidyverse
+
+```{r}
+install.packages("tidyverse")
+```
+
+```{r}
+library(tidyverse)
+```
+
 We will use the **PCA()** function. **PCA()** function first **standardize** the values then creates a new **principal component table** where **first principal component** **(PC1)** corresponds to the directions with the maximum amount of variation in the data set. The **second principal component (PC2)** corresponds to the directions with the second maximum amount of variation in the data set and third, forth, etc..
 
 ```{r}
-pca.data <- PCA(data[,-1:-2], scale.unit = TRUE, graph = FALSE)
+pca.data <- PCA(data[,-1], scale.unit = TRUE, graph = FALSE)
 ```
 
 We next need to use the **fviz_eig()** function to visualize the PC components identified.
@@ -75,3 +87,118 @@ fviz_pca_var(pca.data, col.var = "cos2",
              gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"),
              repel = TRUE) 
 ```
+
+I'm not sure where cos2 comes from. The video doesn't explain much. According to the documentation for this function, it seems to just be a built-in color scheme.
+
+When doing a PCA plot we have the option to plot the **cell types** (sample) or the **gene expression** (the values). It gives us the opportunity to look at the data from different angles which could enable us to find a pattern or a marker.
+
+Lets start by plotting the cell types first. To do that we need to used the **PCA() function** again and use **t() function** to flip our table, so we can put the cell types as rows.
+
+below is the same analysis as above but on transposed data, so that we are analyzing the rows(by converting them to columns)
+
+```{r}
+pca.data <- PCA(t(data[,-1]), scale.unit = TRUE, graph = FALSE)
+```
+
+Then we will use the **viz_pca_ind()** function for the visualization as shown below
+
+```{r}
+fviz_pca_ind(pca.data, col.ind = "cos2", 
+                  gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"), 
+                  repel = TRUE)
+```
+
+The PCA plot above shows that **Day 3**, **4** and **Pre_day** **5** has no correlation with the **day 5**, **6** and **7**. This is because the table we used **only reported highly 100 expressed gene** in **PE**, **TE** and **EPI**. We can see each type of cell (**PE**, **TE** and **EPI**) starting from day 5 **grouped together** which means they have the same gene expression profile.
+
+So, the graph generated here is labeled differently than that in the tutorial. The points all seem to be in the same place, but the labels are different.
+
+I see - the author changed the column names in the original excel file.
+
+I will change the colnames here and try again.
+
+```{r}
+new_col_names <- c( "Lineage", "Day 3","Day 4", "Pre Day 5", "Day 5_EPI", "Day 5_PE", "Day 5_TE", "Day 6_EPI", "Day 6_PE", "Day 6_TE", "Day 7_EPI", "Day 7_PE", "Day 7_TE")
+```
+
+```{r}
+colnames(data) <- new_col_names
+```
+
+That fixed it.
+
+To add labels to the PCA plot we can use **ggpubr** package. First we need to install and load the package
+
+```{r}
+#install
+devtools::install_github("kassambara/ggpubr")
+#load
+library(ggpubr) 
+```
+
+then we need to assign the **previous command** to a variable. We'll use **a**
+
+```{r}
+a <- fviz_pca_ind(pca.data, col.ind = "cos2", 
+                  gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"), 
+                  repel = TRUE)
+```
+
+```{r}
+ggpar(a,
+      title = "Principal Component Analysis",
+      xlab = "PC1", ylab = "PC2",
+      legend.title = "Cos2", legend.position = "top",
+      ggtheme = theme_minimal())
+```
+
+Now lets plot the gene instead of the cell types. We will use the PCA() function
+
+```{r}
+pca.data <- PCA(data[,-1], scale.unit = TRUE,ncp = 2, graph = FALSE)
+```
+
+To color the gene in the PCA plot we will be using the first column (Lineage), it divided the cells into three groups. First we need to convert the column to a factor by the following command
+
+```{r}
+
+data$Lineage <- as.factor(data$Lineage)
+
+```
+
+For the coloring palette we will use the commands below. Here I have 3 groups that\'s why I wrote 3 in the commands below. If you have **4** or **5 group**s make sure you change the colors from 3 to **4** or **5**.
+
+```{r}
+install.packages("RColorBrewer")
+library(RColorBrewer)
+nb.cols <- 3
+mycolors <- colorRampPalette(brewer.pal(3, "Set1"))(nb.cols)
+```
+
+We will use fviz_pca_ind() function to create the **PCA plot** and assign it to a as we did previously.
+
+```{r}
+a <- fviz_pca_ind(pca.data, col.ind = data$Lineage,
+                  palette = mycolors, addEllipses = TRUE)
+```
+
+The second argument below; **col.ind = data\$Lineage** is color indicator, here we used the **Lineage** column. The third argument is the colors we will using (**mycolors** is what create above). The last argument, **addEllipses = TRUE** is adding an oval shape around each group.
+
+```{r}
+a <- fviz_pca_ind(pca.data, col.ind = data$Lineage,
+                  palette = mycolors, addEllipses = TRUE)
+
+```
+
+Then we will use the ggpar() function to add labels
+
+```{r}
+ggpar(a,
+      title = "Principal Component Analysis",
+      xlab = "PC1", ylab = "PC2",
+      legend.title = "Cell type", legend.position = "top",
+      ggtheme = theme_minimal())
+```
+
+From the plot above, we can see that there are some genes are associated with a specific type of cell. These genes could act as marker to identify these cell types. In **TE cells** the **KRT18**, **KRT8** and **S100A16** are highly expresses compare to the other genes. In **EPI cells** the **DPPA5**, **IFITM1** , **MT1X** and **UPP1** are highly expressed compare to other genes. And in **PE cells** only **APOA1** is highly expressed compare to the other genes.
+
+To understand any PCA plot, one should know that similar samples cluster together and different samples cluster away from each others. As shown below we can also understand if the samples are negatively or positively correlate with each others.
