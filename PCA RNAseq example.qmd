@@ -52,3 +52,9 @@ install.packages(c("factoextra", "FactoMineR"))
 library("factoextra")
 library("FactoMineR")
 ```
+
+We will use the **PCA()** function. **PCA()** function first **standardize** the values then creates a new **principal component table** where **first principal component** **(PC1)** corresponds to the directions with the maximum amount of variation in the data set. The **second principal component (PC2)** corresponds to the directions with the second maximum amount of variation in the data set and third, forth, etc..
+
+```{r}
+pca.data <- PCA(data[,-1:-2], scale.unit = TRUE, graph = TRUE)
+```
