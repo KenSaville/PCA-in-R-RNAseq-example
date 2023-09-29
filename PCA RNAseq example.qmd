@@ -25,7 +25,7 @@ You can add options to executable code like this
 
 The `echo: false` option disables the printing of code (only output is displayed).
 
-# Principle component analysis (PCA):  RNA seq example
+# Principle component analysis (PCA): RNA seq example
 
 This is walkthrough of an R tutorial from Bioinformatics for All R Series, described in this [tutorial](https://bioinfo4all.wordpress.com/2021/01/31/tutorial-6-how-to-do-principal-component-analysis-pca-in-r/).
 
@@ -56,5 +56,22 @@ library("FactoMineR")
 We will use the **PCA()** function. **PCA()** function first **standardize** the values then creates a new **principal component table** where **first principal component** **(PC1)** corresponds to the directions with the maximum amount of variation in the data set. The **second principal component (PC2)** corresponds to the directions with the second maximum amount of variation in the data set and third, forth, etc..
 
 ```{r}
-pca.data <- PCA(data[,-1:-2], scale.unit = TRUE, graph = TRUE)
+pca.data <- PCA(data[,-1:-2], scale.unit = TRUE, graph = FALSE)
+```
+
+We next need to use the **fviz_eig()** function to visualize the PC components identified.
+
+```{r}
+fviz_eig(pca.data, addlabels = TRUE, ylim = c(0, 70))
+```
+
+As we can see, the first two principal components explain 81.6% of the variation. There is no one rule you can rely on to make sure your model is acceptable but generally we expect the first three principal components to explain around 70%
+
+To understand the correlation between the samples and how they are well represented by our model we can use **fviz_pca_var()** function to draw a variable correlation plot by using the command below.
+
+```{r}
+
+fviz_pca_var(pca.data, col.var = "cos2",
+             gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"),
+             repel = TRUE) 
 ```
