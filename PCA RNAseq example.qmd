@@ -24,3 +24,31 @@ You can add options to executable code like this
 ```
 
 The `echo: false` option disables the printing of code (only output is displayed).
+
+# Principle component analysis (PCA):  RNA seq example
+
+This is walkthrough of an R tutorial from Bioinformatics for All R Series, described in this [tutorial](https://bioinfo4all.wordpress.com/2021/01/31/tutorial-6-how-to-do-principal-component-analysis-pca-in-r/).
+
+I found this nice series of tutorials on bioinformatics in R. It is based on RNA seq data from this [paper](https://www.cell.com/cell/fulltext/S0092-8674(16)30280-X?_returnURL=https%3A%2F%2Flinkinghub.elsevier.com%2Fretrieve%2Fpii%2FS009286741630280X%3Fshowall%3Dtrue).
+
+The paper looks at genes expressed in different stages of development of human preimplantation embryos.
+
+It uses data from suplementary Table 2. Which I have downloaded and uploaded into to the project.
+
+Let's read in the data
+
+```{r}
+
+data <- read.csv("Table S2.csv", row.names = 1)
+```
+
+Now we need to install and load two R package which will allow us to do PCA in R
+
+```{r}
+#intall
+install.packages(c("factoextra", "FactoMineR"))
+
+#load
+library("factoextra")
+library("FactoMineR")
+```
